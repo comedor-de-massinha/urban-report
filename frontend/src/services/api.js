@@ -8,36 +8,54 @@ const api = axios.create({
   timeout: 15000,
 })
 
-// Interceptor de resposta — trata erros globalmente
+// Extrai a mensagem de erro mais útil possível da resposta
+function extractMessage(error) {
+  const data = error.response?.data
+  if (!data) return 'Erro de conexão. Verifique sua internet.'
+
+  // FastAPI validation errors (array de erros)
+  if (Array.isArray(data.detail)) {
+    return data.detail.map((e) => e.msg || JSON.stringify(e)).join(' | ')
+  }
+
+  // FastAPI HTTPException com string
+  if (typeof data.detail === 'string') return data.detail
+
+  // Fallback genérico por status
+  const status = error.response?.status
+  if (status === 400) return 'Requisição inválida.'
+  if (status === 401) return 'Sessão expirada. Faça login novamente.'
+  if (status === 403) return 'Acesso negado.'
+  if (status === 404) return 'Recurso não encontrado.'
+  if (status === 409) return 'Conflito: registro já existe.'
+  if (status === 413) return 'Arquivo muito grande.'
+  if (status === 415) return 'Tipo de arquivo não permitido.'
+  if (status >= 500) return 'Erro interno do servidor. Tente novamente em instantes.'
+
+  return 'Ocorreu um erro inesperado.'
+}
+
+// Interceptor de resposta
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status
-    const detail = error.response?.data?.detail
+    const message = extractMessage(error)
 
+    // Redireciona para login em caso de token inválido/expirado
     if (status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       delete api.defaults.headers.common['Authorization']
-      window.location.href = '/login'
+      // Só redireciona se não estiver já na página de login
+      if (!window.location.pathname.includes('/login')) {
+        toast.error(message)
+        window.location.href = '/login'
+      }
       return Promise.reject(error)
     }
 
-    if (status === 403) {
-      toast.error('Acesso negado.')
-    } else if (status === 404) {
-      toast.error('Recurso não encontrado.')
-    } else if (status === 422) {
-      const errors = error.response?.data?.detail
-      if (Array.isArray(errors)) {
-        errors.forEach((e) => toast.error(e.msg || 'Erro de validação.'))
-      } else {
-        toast.error(typeof detail === 'string' ? detail : 'Dados inválidos.')
-      }
-    } else if (status >= 500) {
-      toast.error('Erro interno do servidor. Tente novamente.')
-    }
-
+    toast.error(message)
     return Promise.reject(error)
   },
 )
