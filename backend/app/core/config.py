@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
 
+    # Keep-alive (Render free tier)
+    BACKEND_URL: str = ""
+
     # Upload - Cloudinary
     CLOUDINARY_CLOUD_NAME: str
     CLOUDINARY_API_KEY: str
