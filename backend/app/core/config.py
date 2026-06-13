@@ -30,6 +30,8 @@ class Settings(BaseSettings):
 
     @property
     def allowed_origins_list(self) -> List[str]:
+        if self.ALLOWED_ORIGINS.strip() == "*":
+            return ["*"]
         return [o.strip() for o in self.ALLOWED_ORIGINS.split(",")]
 
     class Config:
