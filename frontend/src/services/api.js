@@ -24,10 +24,10 @@ function extractMessage(error) {
   // Fallback genérico por status
   const status = error.response?.status
   if (status === 400) return 'Requisição inválida.'
-  if (status === 401) return 'Sessão expirada. Faça login novamente.'
+  if (status === 401) return 'E-mail ou senha incorretos.'
   if (status === 403) return 'Acesso negado.'
   if (status === 404) return 'Recurso não encontrado.'
-  if (status === 409) return 'Conflito: registro já existe.'
+  if (status === 409) return 'Este e-mail já está cadastrado.'
   if (status === 413) return 'Arquivo muito grande.'
   if (status === 415) return 'Tipo de arquivo não permitido.'
   if (status >= 500) return 'Erro interno do servidor. Tente novamente em instantes.'
@@ -43,13 +43,16 @@ api.interceptors.response.use(
     const message = extractMessage(error)
 
     // Redireciona para login em caso de token inválido/expirado
+    // MAS se já estiver no login, apenas mostra o erro sem redirecionar
     if (status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       delete api.defaults.headers.common['Authorization']
-      // Só redireciona se não estiver já na página de login
-      if (!window.location.pathname.includes('/login')) {
+      if (window.location.pathname.includes('/login')) {
+        // Estamos na tela de login — só mostra o erro, não redireciona
         toast.error(message)
+      } else {
+        toast.error('Sessão expirada. Faça login novamente.')
         window.location.href = '/login'
       }
       return Promise.reject(error)

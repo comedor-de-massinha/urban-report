@@ -4,31 +4,38 @@ import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { UserPlus } from 'lucide-react'
 import { authService } from '../services/auth'
+import { useAuth } from '../context/AuthContext'
+import { handlePhoneChange } from '../hooks/usePhoneMask'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [loading, setLoading] = useState(false)
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm()
 
   const onSubmit = async (formData) => {
     setLoading(true)
     try {
+      // Cadastra e já faz login automático
       await authService.register({
         name: formData.name,
         email: formData.email,
         password: formData.password,
         phone: formData.phone || undefined,
       })
-      toast.success('Conta criada! Faça login para continuar.')
-      navigate('/login')
+      const session = await authService.login(formData.email, formData.password)
+      login(session.access_token, session.user)
+      toast.success(`Bem-vindo, ${session.user.name.split(' ')[0]}!`)
+      navigate('/')
     } catch {
-      // Erro tratado pelo interceptor
+      // Tratado pelo interceptor
     } finally {
       setLoading(false)
     }
@@ -67,9 +74,11 @@ export default function RegisterPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
               <input
                 type="tel"
+                inputMode="numeric"
                 placeholder="(11) 99999-9999"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 {...register('phone')}
+                onChange={handlePhoneChange((v) => setValue('phone', v))}
               />
             </div>
 

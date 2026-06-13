@@ -4,7 +4,6 @@ export const occurrencesService = {
   // Minhas ocorrencias
   myOccurrences: (params = {}) =>
     api.get('/me/occurrences', { params }).then((r) => r.data),
-
   // Listar com filtros
   list: (params = {}) =>
     api.get('/occurrences', { params }).then((r) => r.data),

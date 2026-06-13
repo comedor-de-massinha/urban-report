@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import { PawPrint, Bug, Hammer, MapPin, Upload, CheckCircle, ClipboardList } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { handlePhoneChange } from '../hooks/usePhoneMask'
 import { occurrencesService } from '../services/occurrences'
 
 // Fix ícone padrão do Leaflet com Vite
@@ -52,6 +53,7 @@ export default function ReportPage() {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm()
 
@@ -425,7 +427,14 @@ export default function ReportPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-                <input type="tel" className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" {...register('reporter_phone')} />
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="(11) 99999-9999"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  {...register('reporter_phone')}
+                  onChange={handlePhoneChange((v) => setValue('reporter_phone', v))}
+                />
               </div>
             </div>
           </div>
